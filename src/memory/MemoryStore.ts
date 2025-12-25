@@ -99,8 +99,11 @@ export class MemoryStore {
                 logger.info('Initialized new memory store');
             }
         } catch (error) {
-            logger.error('Failed to load memory store', error);
-            throw error;
+            logger.error(`Failed to load memory store from ${this.filePath}`, error);
+            // Fallback to empty store on corruption to allow app to start
+            // In production, might want to backup the corrupted file first
+            this.data = createEmptyStore();
+            logger.warn('Initialized empty store due to load error');
         }
     }
 

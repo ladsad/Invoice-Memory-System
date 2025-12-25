@@ -102,7 +102,17 @@ interface DecideResult {
 }
 
 /**
- * Main entry point: Process an invoice through the pipeline
+ * Processes a single invoice through the learning pipeline.
+ *
+ * 1. Recall: Fetch memories based on vendor and context.
+ * 2. Apply: Propose corrections using active memories.
+ * 3. Decide: Calculate confidence and set human review flags.
+ * 4. Learn: (Optional) Record updates if simulation/auto-learn is enabled.
+ *
+ * @param invoice - Key invoice data extracted from OCR
+ * @param memoryStore - Persistence layer for fetching/saving memories
+ * @param options - Configuration for simulation or thresholds
+ * @returns {Promise<InvoiceDecisionOutput>} - The final decision with proposed corrections and confidence
  */
 export async function processInvoice(
     invoice: InvoiceInput,
@@ -111,6 +121,35 @@ export async function processInvoice(
 ): Promise<InvoiceDecisionOutput> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     const auditTrail: AuditTrailEntry[] = [];
+
+    // Guard: Ensure vendor name exists
+    if (!invoice.vendor || !invoice.vendor.name) {
+        return {
+            normalizedInvoice: {
+                invoiceId: invoice.invoiceId,
+                vendor: {
+                    normalizedName: 'UNKNOWN',
+                    originalName: 'UNKNOWN',
+                    canonicalId: 'unknown'
+                },
+                invoiceDate: invoice.invoiceDate,
+                dueDate: invoice.dueDate || null,
+                invoiceNumber: invoice.invoiceNumber,
+                totalAmount: invoice.totalAmount,
+                currency: invoice.currency,
+                lineItems: [],
+                poNumber: invoice.poNumber || null,
+                processingTimestamp: new Date().toISOString(),
+                normalizationVersion: '1.0.0'
+            },
+            confidenceScore: 0.0,
+            requiresHumanReview: true,
+            proposedCorrections: [],
+            reasoning: 'Missing required vendor information',
+            auditTrail: [],
+            memoryUpdates: []
+        };
+    }
     let skipLearning = false;
 
     const context: PipelineContext = {

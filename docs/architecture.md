@@ -67,22 +67,62 @@ Comprehensive TypeScript interfaces ensuring type safety across:
 
 ## Data Flow
 
-TODO: Add detailed data flow diagram
+The invoice processing pipeline follows a linear flow with a persistent memory feedback loop:
 
----
+```mermaid
+graph TD
+    Input[Invoice Input] --> Recall
+    
+    subgraph Pipeline
+        Recall[Recall Memory]
+        DuplicateCheck[Duplicate Detection]
+        Apply[Apply Rules]
+        Decide[Decide Action]
+        Learn[Learn & Updates]
+    end
+
+    Recall -->|Memories| DuplicateCheck
+    DuplicateCheck -->|Check Result| Apply
+    Apply -->|Corrections| Decide
+    Decide -->|Outcome| Learn
+    
+    Learn -->|Updates| Store[(Memory Store)]
+    Store -->|Memories| Recall
+    
+    Decide --> Output[Final Output]
+```
 
 ## Memory Lifecycle
 
-TODO: Document memory reinforcement and decay mechanics
+Memories evolve based on their usage and feedback:
 
----
+1.  **Creation**: New memories start with `initialConfidence` (0.3).
+2.  **Reinforcement**: When a correction is approved or a prediction is verified, confidence increases (`+0.15`).
+3.  **Penalization**: When a suggestion is rejected, confidence decreases (`-0.20`).
+4.  **Hard Rejection**: Repeated rejections cause a stronger penalty (`-0.35`).
+5.  **Decay**: Inactive memories lose confidence over time to prioritize recent patterns.
+6.  **Deactivation**: Memories falling below `0.1` confidence are effectively disabled.
 
 ## Configuration
 
-TODO: Document configuration options and defaults
+System behavior is controlled by `src/config.ts`:
 
----
+- **Confidence Thresholds**:
+  - `AUTO_APPLY_THRESHOLD` (0.85): Corrections applied without review.
+  - `HUMAN_REVIEW_THRESHOLD` (0.6): High enough to suggest, but needs review.
+  - `UNRELIABLE_THRESHOLD` (0.5): Below this, memories are considered suspect.
+
+- **Protection Settings**:
+  - `SKIP_LEARNING_FOR_DUPLICATES`: Prevents bad data reinforcement.
+  - `BAD_MEMORY_PROTECTION`: Limits the impact of contradictory memories.
 
 ## Persistence Strategy
 
-TODO: Document file-based persistence and future SQLite migration path
+Currently, the system uses a file-based persistence mechanism:
+
+- **Storage**: JSON file located at `data/memory.json`.
+- **Atomic Writes**: The entire store is written to disk on save.
+- **In-Memory Cache**: All memories are loaded into memory for fast access during processing.
+- **Migration**: The `MemoryStore` class handles schema versioning (current: `2.0.0`) and migration logic.
+
+Future scalability can be achieved by swapping `MemoryStore` backend to SQLite or Redis without changing the `MemoryManager` interface.

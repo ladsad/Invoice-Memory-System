@@ -31,6 +31,9 @@ export interface InvoiceInput {
     /** Due date in ISO 8601 format */
     dueDate?: string;
 
+    /** Service date (may be extracted from vendor-specific fields) */
+    serviceDate?: string;
+
     /** Invoice number as appears on the document */
     invoiceNumber: string;
 
@@ -46,11 +49,21 @@ export interface InvoiceInput {
     /** Purchase order reference */
     poNumber?: string;
 
+    /** Raw text from OCR for additional extraction */
+    rawText?: string;
+
     /** Additional extracted fields (extensible) */
     metadata?: Record<string, unknown>;
 
     /** Raw extraction confidence from upstream OCR/extraction */
     extractionConfidence?: number;
+
+    /** Payment terms (e.g., Skonto) */
+    paymentTerms?: {
+        discountPercent?: number;
+        discountDays?: number;
+        netDays?: number;
+    };
 }
 
 /**
@@ -82,17 +95,28 @@ export interface NormalizedInvoice {
     /** Standardized dates */
     invoiceDate: string;
     dueDate: string | null;
+    serviceDate?: string;
 
     /** Cleaned invoice number */
     invoiceNumber: string;
 
     /** Financial details */
     totalAmount: number;
+    netAmount?: number;
+    taxAmount?: number;
+    taxRate?: number;
     currency: string;
     lineItems: NormalizedLineItem[];
 
     /** References */
     poNumber: string | null;
+
+    /** Payment terms */
+    paymentTerms?: {
+        discountPercent?: number;
+        discountDays?: number;
+        netDays?: number;
+    };
 
     /** Processing metadata */
     processingTimestamp: string;
@@ -423,8 +447,8 @@ export interface ProposedCorrection {
     /** Reasoning for this correction */
     reasoning: string;
 
-    /** Source of this correction (memory ID or rule name) */
-    source: string;
+    /** Source of this correction (memory ID or rule name) - optional for heuristic corrections */
+    source?: string;
 
     /** Whether this was auto-applied or needs review */
     autoApplied: boolean;

@@ -204,7 +204,70 @@ Each processing generates entries like:
 
 ### Next Steps
 
+- [x] Add vendor-specific field mapping rules
+- [x] Implement tax recomputation logic
 - [ ] Add sample invoice data for testing
 - [ ] Implement CLI demo runner
-- [ ] Add vendor-specific field mapping rules
-- [ ] Implement tax recomputation logic
+
+---
+
+## Session 4: Vendor and Correction Rules
+
+**Date:** 2025-12-25
+
+### What Was Done
+
+1. **Enhanced Type Definitions**
+   - Added `serviceDate`, `rawText`, `paymentTerms` to `InvoiceInput`
+   - Added `serviceDate`, `netAmount`, `taxAmount`, `taxRate`, `paymentTerms` to `NormalizedInvoice`
+
+2. **Vendor Rules** (`src/core/rules/vendorRules.ts`)
+   - **Supplier GmbH**:
+     - Field mapping: "Leistungsdatum" -> `serviceDate`
+     - PO matching suggestions based on line item analysis
+   - **Parts AG**:
+     - VAT included detection ("MwSt. inkl.", "Prices incl. VAT")
+     - Tax recomputation with net/gross separation
+     - Currency extraction from rawText
+   - **Freight & Co**:
+     - Skonto term detection (e.g., "2% Skonto within 14 days")
+     - SKU mapping: "Seefracht"/"Shipping" -> FREIGHT
+
+3. **Correction Rules** (`src/core/rules/correctionRules.ts`)
+   - Heuristic corrections (currency, date format, SKU suggestions)
+   - Pattern-based memory matching
+   - Resolution memory integration (`recordHumanDecision()`)
+
+### Vendor-Specific Rules Summary
+
+| Vendor | Rule | Implementation |
+|--------|------|----------------|
+| Supplier GmbH | Leistungsdatum mapping | Extracts from metadata, maps to serviceDate |
+| Supplier GmbH | PO matching | Analyzes line items for product codes |
+| Parts AG | VAT detection | Regex patterns for "inkl.", "brutto", etc. |
+| Parts AG | Currency extraction | Parses rawText for EUR/USD/CHF/GBP |
+| Freight & Co | Skonto detection | Extracts discount %, days from text |
+| Freight & Co | FREIGHT SKU | Maps shipping descriptions to SKU |
+
+### Problems Encountered
+
+1. **Type Extensions**: Needed additional fields (`rawText`, `serviceDate`) in InvoiceInput.
+   - **Solution**: Extended types with optional fields for backward compatibility.
+
+2. **VAT Rate Ambiguity**: Different regions use different VAT rates (19%, 20%, etc.).
+   - **Solution**: Default to 19% for German patterns, 20% for UK patterns.
+
+3. **Currency Extraction Accuracy**: Multiple currencies might appear in rawText.
+   - **Solution**: Use first match, boost confidence if vendor memory confirms.
+
+### Edge Cases
+
+- Invoices without rawText rely solely on memory/metadata
+- Date format normalization handles DD.MM.YYYY and DD/MM/YYYY
+- Skonto detection requires structured text patterns
+
+### Next Steps
+
+- [ ] Add sample invoice data for testing
+- [ ] Create CLI demo runner with test scenarios
+- [ ] Add unit tests for rule modules

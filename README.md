@@ -82,6 +82,20 @@ InvoiceInput -> [RECALL] -> [APPLY] -> [DECIDE] -> [LEARN] -> InvoiceDecisionOut
 | **Decide** | Calculate confidence, auto-accept or escalate to human |
 | **Learn** | Generate memory updates (reinforce/create/penalize) |
 
+## Vendor-Specific Rules
+
+The system includes specialized rules for known vendors:
+
+| Vendor | Rule | Implementation |
+|--------|------|----------------|
+| **Supplier GmbH** | Field mapping | `Leistungsdatum` -> `serviceDate` |
+| **Supplier GmbH** | PO matching | Analyzes line items for product codes |
+| **Parts AG** | VAT detection | Detects "MwSt. inkl.", "brutto", "Prices incl. VAT" |
+| **Parts AG** | Tax recomputation | Extracts net amount from gross (19% DE, 20% UK) |
+| **Parts AG** | Currency extraction | Parses rawText for EUR/USD/CHF/GBP |
+| **Freight & Co** | Skonto detection | Extracts discount %, days from payment terms |
+| **Freight & Co** | SKU mapping | "Seefracht"/"Shipping" -> SKU `FREIGHT` |
+
 ## Output Format
 
 For each processed invoice, the system outputs:

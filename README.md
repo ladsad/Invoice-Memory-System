@@ -45,7 +45,12 @@ invoice-memory-system/
 │   │   ├── confidence.ts     # Confidence scoring functions
 │   │   └── index.ts
 │   ├── core/                 # Decision engine logic
+│   │   ├── pipeline.ts       # Main processInvoice() function
+│   │   ├── audit.ts          # Audit trail helpers
 │   │   ├── decision-engine.ts
+│   │   ├── rules/            # Rule modules
+│   │   │   ├── vendorRules.ts
+│   │   │   └── correctionRules.ts
 │   │   └── index.ts
 │   ├── demo/                 # Demo runner scripts
 │   │   └── demo-runner.ts
@@ -61,6 +66,21 @@ invoice-memory-system/
 ├── tsconfig.json
 └── README.md
 ```
+
+## Processing Pipeline
+
+Each invoice is processed through 4 phases:
+
+```
+InvoiceInput -> [RECALL] -> [APPLY] -> [DECIDE] -> [LEARN] -> InvoiceDecisionOutput
+```
+
+| Phase | Description |
+|-------|-------------|
+| **Recall** | Fetch vendor, correction, and duplicate memories |
+| **Apply** | Normalize invoice, propose corrections based on memory |
+| **Decide** | Calculate confidence, auto-accept or escalate to human |
+| **Learn** | Generate memory updates (reinforce/create/penalize) |
 
 ## Output Format
 

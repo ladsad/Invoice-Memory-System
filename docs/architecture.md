@@ -143,6 +143,14 @@ System behavior is controlled by `src/config.ts`:
   - `SKIP_LEARNING_FOR_DUPLICATES`: Prevents bad data reinforcement.
   - `BAD_MEMORY_PROTECTION`: Limits the impact of contradictory memories.
 
+## Audit System (`src/core/audit.ts`)
+
+To ensure explainability, every pipeline execution generates a structured audit log:
+
+-   **Structure**: Array of `AuditTrailEntry` objects (` { step, timestamp, details } `).
+-   **Granularity**: Logs major decisions (Recall count, specific rules applied, confidence calculations).
+-   **Storage**: currently embedded in the JSON response; can be streamed to Elastic/Splunk in future.
+
 ## Persistence Strategy
 
 Currently, the system uses a file-based persistence mechanism:

@@ -270,7 +270,49 @@ Each processing generates entries like:
 
 - [x] Implement demo runner
 - [ ] Add unit tests for rule modules
-- [ ] Create CLI interface for single invoice processing
+- [x] Create CLI interface for single invoice processing (Implemented as smoke test)
+
+---
+
+## Session 7: Finalization & Documentation
+
+**Date:** 2025-12-25
+
+### What Was Done
+
+1.  **Smoke Test Implementation** (`src/demo/smokeTest.ts`):
+    -   Added a quick validation script to verify the core pipeline without external dependencies.
+    -   Verified that schema migration (`1.0.0` -> `2.0.0`) works correctly on initialization.
+
+2.  **Documentation Overhaul**:
+    -   **README.md**: Completely rewritten to serve as a comprehensive guide for users and developers. Includes:
+        -   Project Overview & Architecture
+        -   Installation & Demonstration guides
+        -   Design Decisions (Confidence, Memory Protection)
+        -   Audit & Explainability details
+    -   **Architecture**: Finalized "End-to-End Flow" and extensibility notes.
+
+### System Final State
+
+The Invoice Memory System is now a functional prototype capable of:
+-   **Learning** from human corrections (Field mappings, VAT rules).
+-   **Detecting Duplicates** using fuzzy hashing.
+-   **Protecting** purely learning from bad data using confidence thresholds.
+-   **Explaining** decisions via a detailed audit trail.
+
+### Known Limitations
+
+-   **Persistence**: Uses a JSON file (`memory.json`). Not suitable for high-concurrency production environments without migrating to a database (SQLite/Postgres).
+-   **Concurrency**: In-memory cache with write-on-save is simple but not thread-safe for multiple instances.
+-   **Rule Complexity**: Currently uses heuristic regex/logic. Could be enhanced with a lightweight ML model for harder fields.
+
+### Potential Next Steps
+
+-   **UI Dashboard**: A frontend to visualize memory confidence and edit rules.
+-   **Database Migration**: Abstract `MemoryStore` to use an SQL backend.
+-   **API Wrapper**: Wrap `processInvoice` in a REST/GraphQL API.
+
+---
 
 ---
 

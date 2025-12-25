@@ -268,6 +268,79 @@ Each processing generates entries like:
 
 ### Next Steps
 
+- [x] Implement duplicate detection
+- [x] Add bad memory protection
+- [ ] Add sample invoice data for testing
+- [ ] Create CLI demo runner with test scenarios
+- [ ] Add unit tests for rule modules
+
+---
+
+## Session 5: Duplicates and Bad Memory Protection
+
+**Date:** 2025-12-25
+
+### What Was Done
+
+1. **Configuration Module** (`src/config.ts`)
+   - `CONFIDENCE_THRESHOLDS`: AUTO_APPLY (0.85), HUMAN_REVIEW (0.6), UNRELIABLE (0.5), DEACTIVATION (0.1)
+   - `CONFIDENCE_DELTAS`: INITIAL (0.3), REINFORCEMENT (+0.15), PENALTY (-0.2), HARD_REJECTION (-0.35)
+   - `DUPLICATE_DETECTION`: DATE_WINDOW (7 days), AMOUNT_TOLERANCE (2%), CONFIDENCE_PENALTY (50%)
+   - `BAD_MEMORY_PROTECTION`: REJECTION_COUNT (3), CONTRADICTION_RATIO (40%)
+
+2. **Duplicate Detection** (`src/core/duplicates.ts`)
+   - `checkForDuplicate()`: Hash-based duplicate lookup
+   - `generateDuplicateHash()`: Vendor + invoice number + month
+   - `recordDuplicate()`: Store for future detection
+   - `recordInvoiceForDuplicateDetection()`: Track processed invoices
+
+3. **Bad Memory Protection** (`src/core/protection.ts`)
+   - `checkMemoryQuality()`: Assess reliability based on confidence and contradictions
+   - `applyBadMemoryProtection()`: Block auto-apply for low-confidence corrections
+   - `processHumanDecision()`: Apply reinforcement/penalty
+   - `shouldRequireHumanReview()`: Force review for unreliable memories
+   - `calculateAdjustedConfidence()`: Weight by reinforcement count
+
+4. **Pipeline Integration** (`src/core/pipeline.ts`)
+   - Duplicate check after recall, before apply
+   - Skip learning for duplicates
+   - Apply confidence penalty for duplicates
+   - Force human review for duplicates
+
+### Duplicate Detection Flow
+
+```
+Invoice -> Generate Hash -> Lookup in Memory
+              |                    |
+              v                    v
+         [Not Found]          [Found Match]
+              |                    |
+              v                    v
+         Continue           Skip Learning
+         Processing         Flag for Review
+```
+
+### Thresholds Summary
+
+| Threshold | Value | Purpose |
+|-----------|-------|---------|
+| Auto-Apply | 85% | Corrections applied without review |
+| Human Review | 60% | Force escalation |
+| Unreliable | 50% | Mark memory as questionable |
+| Deactivation | 10% | Disable memory entirely |
+| Hard Rejection Penalty | -35% | Applied after 3+ rejections |
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Hash-based detection | Fast O(1) lookup for exact matches |
+| Skip learning on duplicate | Prevent reinforcing from same data |
+| Config-based thresholds | Easy tuning without code changes |
+| Contradiction ratio | Tracks disagreement between sources |
+
+### Next Steps
+
 - [ ] Add sample invoice data for testing
 - [ ] Create CLI demo runner with test scenarios
 - [ ] Add unit tests for rule modules

@@ -114,6 +114,27 @@ For each processed invoice, the system outputs:
 }
 ```
 
+## Duplicate Detection
+
+Prevents double-processing and learning from duplicate data:
+
+- **Hash-based detection**: Vendor + Invoice Number + Month
+- **Skip learning**: Duplicates don't reinforce or create memory
+- **Confidence penalty**: 50% reduction for detected duplicates
+- **Forces human review**: All duplicates require review
+
+## Bad Memory Protection
+
+Safeguards against incorrect or low-confidence memory:
+
+| Threshold | Value | Effect |
+|-----------|-------|--------|
+| Auto-Apply | 85% | Corrections applied without human review |
+| Human Review | 60% | Force escalation to human |
+| Unreliable | 50% | Mark memory as questionable |
+| Deactivation | 10% | Disable memory entirely |
+| Hard Rejection | -35% | Penalty after 3+ rejections |
+
 ## Memory Types
 
 1. **Vendor Memory** - Canonical names, field mappings, behaviors (VAT, currency, payment terms)

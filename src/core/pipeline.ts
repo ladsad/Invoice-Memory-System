@@ -17,12 +17,18 @@ import {
 } from '../types';
 import { MemoryStore } from '../memory';
 import { getTimestamp, generateHash } from '../utils';
+import { DUPLICATE_DETECTION } from '../config';
 import {
     createAuditEntry,
     appendToAuditLog,
     buildReasoningFromAudit,
     AuditStep,
 } from './audit';
+import {
+    checkForDuplicate,
+    recordDuplicate,
+    recordInvoiceForDuplicateDetection,
+} from './duplicates';
 import { applyVendorMemories, shouldAddNameVariation } from './rules/vendorRules';
 import { applyCorrectionMemories } from './rules/correctionRules';
 
@@ -105,6 +111,7 @@ export async function processInvoice(
 ): Promise<InvoiceDecisionOutput> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     const auditTrail: AuditTrailEntry[] = [];
+    let skipLearning = false;
 
     const context: PipelineContext = {
         invoice,
@@ -124,6 +131,20 @@ export async function processInvoice(
         `${recallResult.duplicateRecord ? 'potential duplicate' : 'no duplicate'}`
     );
 
+    // Check for duplicate (after recall, before apply)
+    const duplicateCheck = checkForDuplicate(invoice, memoryStore);
+    if (duplicateCheck.isDuplicate) {
+        skipLearning = duplicateCheck.skipLearning;
+        addAudit(
+            context,
+            'decide',
+            `Duplicate detected: ${duplicateCheck.reason}. Similarity: ${(duplicateCheck.similarityScore * 100).toFixed(0)}%`
+        );
+
+        // Record the duplicate
+        recordDuplicate(memoryStore, invoice, duplicateCheck);
+    }
+
     // Phase 2: Apply
     addAudit(context, 'apply', 'Applying memories to normalize invoice');
     const applyResult = await applyMemories(context, recallResult);
@@ -136,7 +157,18 @@ export async function processInvoice(
 
     // Phase 3: Decide
     addAudit(context, 'decide', 'Evaluating confidence and determining action');
-    const decideResult = await decideActions(context, applyResult, recallResult);
+    let decideResult = await decideActions(context, applyResult, recallResult);
+
+    // Apply duplicate penalty to confidence
+    if (duplicateCheck.isDuplicate) {
+        decideResult = {
+            ...decideResult,
+            confidenceScore: decideResult.confidenceScore * (1 - DUPLICATE_DETECTION.DUPLICATE_CONFIDENCE_PENALTY),
+            requiresHumanReview: true,
+            reasoning: `${decideResult.reasoning}. DUPLICATE: ${duplicateCheck.reason}`,
+        };
+    }
+
     addAudit(
         context,
         'decide',
@@ -145,10 +177,18 @@ export async function processInvoice(
             : `Auto-approved with confidence ${(decideResult.confidenceScore * 100).toFixed(0)}%`
     );
 
-    // Phase 4: Learn
-    addAudit(context, 'learn', 'Recording memory updates');
-    const memoryUpdates = await learnFromOutcome(context, recallResult, applyResult, decideResult);
-    addAudit(context, 'learn', `Generated ${memoryUpdates.length} memory update(s)`);
+    // Phase 4: Learn (skip if duplicate)
+    let memoryUpdates: MemoryUpdate[] = [];
+    if (skipLearning) {
+        addAudit(context, 'learn', 'Skipping learning - duplicate invoice detected');
+    } else {
+        addAudit(context, 'learn', 'Recording memory updates');
+        memoryUpdates = await learnFromOutcome(context, recallResult, applyResult, decideResult);
+        addAudit(context, 'learn', `Generated ${memoryUpdates.length} memory update(s)`);
+
+        // Record invoice hash for future duplicate detection
+        recordInvoiceForDuplicateDetection(memoryStore, invoice, duplicateCheck.duplicateHash);
+    }
 
     // Build final output
     const output: InvoiceDecisionOutput = {

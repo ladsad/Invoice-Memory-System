@@ -38,9 +38,11 @@ invoice-memory-system/
 ├── src/
 │   ├── index.ts              # Application entry point
 │   ├── types/                # TypeScript interfaces
-│   │   └── index.ts
+│   │   └── index.ts          # All type definitions
 │   ├── memory/               # Memory persistence layer
-│   │   ├── memory-manager.ts
+│   │   ├── memory-manager.ts # High-level memory operations
+│   │   ├── MemoryStore.ts    # Persistence class with CRUD
+│   │   ├── confidence.ts     # Confidence scoring functions
 │   │   └── index.ts
 │   ├── core/                 # Decision engine logic
 │   │   ├── decision-engine.ts
@@ -80,10 +82,23 @@ For each processed invoice, the system outputs:
 
 ## Memory Types
 
-1. **Vendor Memory** - Canonical names, patterns, payment terms
-2. **Correction Memory** - Field-level corrections with confidence
-3. **Resolution Memory** - How ambiguities were resolved
-4. **Duplicate Records** - Invoice hashes for duplicate detection
+1. **Vendor Memory** - Canonical names, field mappings, behaviors (VAT, currency, payment terms)
+2. **Correction Memory** - Pattern-based corrections with signatures and conditions
+3. **Resolution Memory** - Human decisions (approve/reject) for reinforcement learning
+4. **Duplicate Records** - Hash-based duplicate detection with similarity scoring
+
+## Confidence System
+
+The memory system uses confidence scoring to determine when to auto-apply vs request human review:
+
+| Function | Effect |
+|----------|--------|
+| `initialConfidence()` | New memories start at 0.3 |
+| `reinforce()` | +0.15 with diminishing returns (max 0.95) |
+| `penalize()` | -0.20 (min 0.0) |
+| `applyDecay()` | Time-based decay after 7-day grace period |
+
+Memories with confidence below 0.1 are automatically deactivated.
 
 ## Documentation
 

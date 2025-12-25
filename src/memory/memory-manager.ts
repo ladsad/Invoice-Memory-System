@@ -166,6 +166,7 @@ export class MemoryManager {
         } else {
             // Create new vendor memory
             const newVendor: VendorMemory = {
+                ...vendor,
                 type: 'vendor',
                 id: generateId('vendor'),
                 createdAt: getTimestamp(),
@@ -174,9 +175,11 @@ export class MemoryManager {
                 reinforcementCount: 1,
                 contradictionCount: 0,
                 isActive: true,
-                nameVariations: [],
+                nameVariations: vendor.nameVariations || [],
                 canonicalName: vendor.canonicalName || '',
-                ...vendor,
+                canonicalId: vendor.canonicalId,
+                fieldMappings: vendor.fieldMappings || {},
+                behaviors: vendor.behaviors || {},
             };
             this.memoryStore.vendors[vendor.canonicalId] = newVendor;
             this.isDirty = true;
@@ -189,18 +192,18 @@ export class MemoryManager {
     // ===========================================================================
 
     /**
-     * Get all correction memories for a field type
+     * Get all correction memories for a pattern type
      */
-    getCorrectionsByFieldType(fieldType: CorrectionMemory['fieldType']): CorrectionMemory[] {
-        return this.memoryStore.corrections.filter((c) => c.fieldType === fieldType && c.isActive);
+    getCorrectionsByPatternType(patternType: CorrectionMemory['pattern']['type']): CorrectionMemory[] {
+        return this.memoryStore.corrections.filter((c) => c.pattern.type === patternType && c.isActive);
     }
 
     /**
-     * Find a correction for a specific original value
+     * Find a correction for a specific pattern signature
      */
-    findCorrection(fieldType: CorrectionMemory['fieldType'], originalValue: string): CorrectionMemory | undefined {
+    findCorrectionBySignature(signature: string): CorrectionMemory | undefined {
         return this.memoryStore.corrections.find(
-            (c) => c.fieldType === fieldType && c.originalValue === originalValue && c.isActive
+            (c) => c.pattern.signature === signature && c.isActive
         );
     }
 

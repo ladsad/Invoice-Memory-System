@@ -142,13 +142,60 @@ export interface BaseMemoryRecord {
 }
 
 /**
+ * Field mapping for vendor-specific field translations
+ * e.g., "Leistungsdatum" -> "serviceDate"
+ */
+export interface FieldMapping {
+    /** Original field name as seen in vendor invoices */
+    sourceField: string;
+
+    /** Normalized/target field name in our system */
+    targetField: string;
+
+    /** Confidence in this mapping (0-1) */
+    confidence: number;
+
+    /** Number of times this mapping has been seen */
+    occurrenceCount: number;
+
+    /** Example values seen for this field */
+    exampleValues?: string[];
+}
+
+/**
+ * Vendor-specific behaviors and defaults
+ */
+export interface VendorBehavior {
+    /** Whether VAT is typically included in amounts */
+    vatIncluded?: boolean;
+
+    /** Default VAT rate for this vendor */
+    defaultVatRate?: number;
+
+    /** Default currency for this vendor */
+    defaultCurrency?: string;
+
+    /** Typical payment terms in days */
+    paymentTermsDays?: number;
+
+    /** Expected invoice number pattern (regex) */
+    invoiceNumberPattern?: string;
+
+    /** Common categories for this vendor */
+    expectedCategories?: string[];
+
+    /** Quantity resolution strategy for mismatches */
+    quantityMismatchStrategy?: 'preferInvoice' | 'preferDeliveryNote' | 'askHuman';
+
+    /** Tax recomputation rule */
+    taxRecomputationRule?: 'useVendorTax' | 'recompute' | 'askHuman';
+}
+
+/**
  * Memory record for vendor-specific patterns and normalization rules
  */
 export interface VendorMemory extends BaseMemoryRecord {
     type: 'vendor';
-
-    /** Original vendor name variations encountered */
-    nameVariations: string[];
 
     /** Canonical/normalized vendor name */
     canonicalName: string;
@@ -156,64 +203,89 @@ export interface VendorMemory extends BaseMemoryRecord {
     /** Canonical vendor ID */
     canonicalId: string;
 
-    /** Typical payment terms for this vendor */
-    typicalPaymentTerms?: number;
+    /** Original vendor name variations encountered */
+    nameVariations: string[];
 
-    /** Common invoice patterns */
-    invoiceNumberPattern?: string;
+    /** Field mappings specific to this vendor */
+    fieldMappings: Record<string, FieldMapping>;
 
-    /** Expected categories for this vendor */
-    expectedCategories?: string[];
+    /** Vendor-specific behaviors */
+    behaviors: VendorBehavior;
 
     /** Tax ID if known */
     taxId?: string;
 }
 
 /**
- * Memory record for field-level corrections
+ * Pattern signature for correction matching
+ */
+export interface CorrectionPattern {
+    /** Type of pattern */
+    type: 'quantityMismatch' | 'taxRecomputation' | 'fieldCorrection' | 'amountAdjustment' | 'other';
+
+    /** Unique signature for this pattern (used for matching) */
+    signature: string;
+
+    /** Description of what condition triggers this pattern */
+    condition: string;
+
+    /** Additional context for the pattern */
+    context?: Record<string, unknown>;
+}
+
+/**
+ * Memory record for correction patterns
  */
 export interface CorrectionMemory extends BaseMemoryRecord {
     type: 'correction';
 
-    /** Type of field being corrected */
-    fieldType: 'vendorName' | 'amount' | 'date' | 'invoiceNumber' | 'lineItem' | 'category' | 'other';
+    /** Pattern that triggers this correction */
+    pattern: CorrectionPattern;
 
-    /** Original value that was corrected */
-    originalValue: string;
-
-    /** Corrected value */
-    correctedValue: string;
+    /** Suggested action to take */
+    suggestedAction: string;
 
     /** Vendor context (if vendor-specific correction) */
     vendorId?: string;
-
-    /** Description of why this correction is applied */
-    correctionReason: string;
 
     /** Whether this correction was human-approved */
     humanApproved: boolean;
 }
 
 /**
- * Memory record for resolution patterns (how ambiguities were resolved)
+ * Human decision record
+ */
+export interface HumanDecision {
+    /** Type of decision */
+    decisionType: 'approveCorrection' | 'rejectCorrection' | 'approveInvoice' | 'escalate';
+
+    /** The action taken */
+    action: 'approved' | 'rejected' | 'modified';
+
+    /** Timestamp of the decision */
+    timestamp: string;
+
+    /** Optional reason provided */
+    reason?: string;
+
+    /** User ID who made the decision */
+    userId?: string;
+}
+
+/**
+ * Memory record for resolution patterns (tracking human decisions)
  */
 export interface ResolutionMemory extends BaseMemoryRecord {
     type: 'resolution';
 
-    /** Type of ambiguity that was resolved */
-    ambiguityType: 'duplicateVendor' | 'amountMismatch' | 'dateConflict' | 'missingField' | 'other';
+    /** History of human decisions for this pattern */
+    decisions: HumanDecision[];
 
-    /** Description of the ambiguity */
-    ambiguityDescription: string;
-
-    /** How the ambiguity was resolved */
-    resolutionAction: string;
+    /** Related memory ID that was approved/rejected */
+    relatedMemoryId?: string;
 
     /** Context hash for matching similar situations */
     contextHash: string;
-
-    /** Whether this resolution was human-approved */
-    humanApproved: boolean;
 }
 
 /**
@@ -222,17 +294,23 @@ export interface ResolutionMemory extends BaseMemoryRecord {
 export interface DuplicateRecord extends BaseMemoryRecord {
     type: 'duplicate';
 
-    /** Invoice ID of the original invoice */
-    originalInvoiceId: string;
-
-    /** Invoice ID of the duplicate */
-    duplicateInvoiceId: string;
-
     /** Hash used for duplicate detection */
     duplicateHash: string;
 
-    /** Similarity score (0-1) */
-    similarityScore: number;
+    /** Invoice ID of the original invoice */
+    originalInvoiceId: string;
+
+    /** Invoice IDs of duplicates */
+    duplicateInvoiceIds: string[];
+
+    /** Vendor ID for this duplicate set */
+    vendorId: string;
+
+    /** Invoice number */
+    invoiceNumber: string;
+
+    /** Amount for similarity matching */
+    amount: number;
 
     /** Whether this was confirmed as a duplicate */
     confirmedDuplicate: boolean;
@@ -247,7 +325,7 @@ export interface DuplicateRecord extends BaseMemoryRecord {
 export type MemoryRecord = VendorMemory | CorrectionMemory | ResolutionMemory | DuplicateRecord;
 
 /**
- * Root memory store structure
+ * Root memory store structure (legacy - used by MemoryManager)
  */
 export interface MemoryStore {
     /** Schema version for migration support */
@@ -264,6 +342,37 @@ export interface MemoryStore {
 
     /** Resolution memories */
     resolutions: ResolutionMemory[];
+
+    /** Duplicate detection records */
+    duplicates: DuplicateRecord[];
+
+    /** Global statistics */
+    stats: {
+        totalInvoicesProcessed: number;
+        totalCorrectionsApplied: number;
+        totalHumanReviewsRequested: number;
+        averageConfidence: number;
+    };
+}
+
+/**
+ * Root memory store data structure (used by MemoryStore class)
+ */
+export interface MemoryStoreData {
+    /** Schema version for migration support */
+    schemaVersion: string;
+
+    /** Last updated timestamp */
+    lastUpdated: string;
+
+    /** Vendor memories indexed by canonical vendor ID */
+    vendorMemories: Record<string, VendorMemory>;
+
+    /** Correction memories */
+    correctionMemories: CorrectionMemory[];
+
+    /** Resolution memories */
+    resolutionMemories: ResolutionMemory[];
 
     /** Duplicate detection records */
     duplicates: DuplicateRecord[];

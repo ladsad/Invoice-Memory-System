@@ -126,7 +126,85 @@ This document captures the development journey of the Invoice Memory System, inc
 
 ### Next Steps
 
-- [ ] Integrate MemoryStore with DecisionEngine
+- [x] Implement the recall/apply/decide/learn pipeline
 - [ ] Add sample invoice data for testing
-- [ ] Implement the recall/apply/decide/learn pipeline
 - [ ] Add CLI demo runner
+- [ ] Implement vendor-specific rules
+
+---
+
+## Session 3: Pipeline and Audit Trail
+
+**Date:** 2025-12-25
+
+### What Was Done
+
+1. **Pipeline Module** (`src/core/pipeline.ts`)
+   - `processInvoice()`: Main orchestrator function
+   - `recallMemories()`: Fetches vendor, correction, and duplicate memories
+   - `applyMemories()`: Applies vendor normalization and corrections
+   - `decideActions()`: Determines auto-accept vs escalate
+   - `learnFromOutcome()`: Generates memory updates
+
+2. **Audit Module** (`src/core/audit.ts`)
+   - `createAuditEntry()`: Creates timestamped entries
+   - `appendToAuditLog()`: Writes to `data/audit-log.jsonl`
+   - `buildReasoningFromAudit()`: Composes human-readable reasoning
+
+3. **Rule Stubs**
+   - `src/core/rules/vendorRules.ts`: `applyVendorMemories()` for vendor normalization
+   - `src/core/rules/correctionRules.ts`: `applyCorrectionMemories()` for pattern-based corrections
+
+### Pipeline Flow
+
+```
+InvoiceInput
+    |
+    v
+[1. RECALL] -> Fetch vendor/correction/duplicate memories
+    |
+    v
+[2. APPLY] -> Apply vendor normalization, pattern corrections
+    |
+    v
+[3. DECIDE] -> Calculate confidence, determine auto/escalate
+    |
+    v
+[4. LEARN] -> Generate memory updates (reinforce/create)
+    |
+    v
+InvoiceDecisionOutput (with auditTrail)
+```
+
+### Audit Trail Structure
+
+Each processing generates entries like:
+```json
+{
+  "step": "recall|apply|decide|learn",
+  "timestamp": "ISO8601",
+  "details": "Human-readable description"
+}
+```
+
+### Confidence Calculation
+
+- Weighted average: 60% vendor confidence + 40% correction confidence
+- Penalties: Duplicate detected (-30% to -70%), pending corrections (escalate)
+- Threshold: Below 60% triggers human review
+
+### Design Decisions
+
+| Decision | Rationale |
+|----------|-----------|
+| Separate rule modules | Allows vendor and correction logic to evolve independently |
+| Audit trail in output | Complete traceability for debugging and compliance |
+| JSONL audit log | Append-only, easy to parse, no locking issues |
+| Weighted confidence | Vendor memory more reliable than correction patterns |
+
+### Next Steps
+
+- [ ] Add sample invoice data for testing
+- [ ] Implement CLI demo runner
+- [ ] Add vendor-specific field mapping rules
+- [ ] Implement tax recomputation logic

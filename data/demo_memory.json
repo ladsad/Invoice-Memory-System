@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "2.0.0",
+  "lastUpdated": "2025-12-25T15:17:37.932Z",
+  "vendorMemories": {
+    "unknown": {
+      "type": "vendor",
+      "id": "vendor_mjll6was_29daee760aefb5a1",
+      "createdAt": "2025-12-25T15:17:37.924Z",
+      "updatedAt": "2025-12-25T15:17:37.928Z",
+      "confidence": 0.4890581717451523,
+      "reinforcementCount": 3,
+      "contradictionCount": 0,
+      "isActive": true,
+      "canonicalId": "unknown",
+      "canonicalName": "unknown",
+      "nameVariations": [],
+      "fieldMappings": {
+        "Leistungsdatum": {
+          "sourceField": "Leistungsdatum",
+          "targetField": "serviceDate",
+          "confidence": 0.8,
+          "occurrenceCount": 1,
+          "exampleValues": [
+            "2024-01-01"
+          ]
+        }
+      },
+      "behaviors": {}
+    }
+  },
+  "correctionMemories": [],
+  "resolutionMemories": [],
+  "duplicates": [
+    {
+      "type": "duplicate",
+      "id": "dup_mjll6waq_2a4954407e1bfa3b",
+      "createdAt": "2025-12-25T15:17:37.922Z",
+      "updatedAt": "2025-12-25T15:17:37.922Z",
+      "confidence": 0.3,
+      "reinforcementCount": 1,
+      "contradictionCount": 0,
+      "isActive": true,
+      "duplicateHash": "4c83a2db7c3b1ee4",
+      "originalInvoiceId": "INV-A-001",
+      "duplicateInvoiceIds": [],
+      "vendorId": "suppliergmbh",
+      "invoiceNumber": "INV-2024-001",
+      "amount": 2975,
+      "confirmedDuplicate": false,
+      "resolution": "pending"
+    },
+    {
+      "type": "duplicate",
+      "id": "dup_mjll6wat_d7ecd358bb095532",
+      "createdAt": "2025-12-25T15:17:37.925Z",
+      "updatedAt": "2025-12-25T15:17:37.925Z",
+      "confidence": 0.3,
+      "reinforcementCount": 1,
+      "contradictionCount": 0,
+      "isActive": true,
+      "duplicateHash": "1f1497cab84b49f6",
+      "originalInvoiceId": "INV-A-003",
+      "duplicateInvoiceIds": [],
+      "vendorId": "suppliergmbh",
+      "invoiceNumber": "INV-2024-003",
+      "amount": 595,
+      "confirmedDuplicate": false,
+      "resolution": "pending"
+    },
+    {
+      "type": "duplicate",
+      "id": "dup_mjll6wav_95fa23fdfaa2f98f",
+      "createdAt": "2025-12-25T15:17:37.927Z",
+      "updatedAt": "2025-12-25T15:17:37.927Z",
+      "confidence": 0.3,
+      "reinforcementCount": 1,
+      "contradictionCount": 0,
+      "isActive": true,
+      "duplicateHash": "77f4b3785cd03a3b",
+      "originalInvoiceId": "INV-B-001",
+      "duplicateInvoiceIds": [],
+      "vendorId": "partsag",
+      "invoiceNumber": "PA-7781",
+      "amount": 2400,
+      "confirmedDuplicate": false,
+      "resolution": "pending"
+    },
+    {
+      "type": "duplicate",
+      "id": "dup_mjll6way_7747217bc4d8356e",
+      "createdAt": "2025-12-25T15:17:37.930Z",
+      "updatedAt": "2025-12-25T15:17:37.930Z",
+      "confidence": 0.3,
+      "reinforcementCount": 1,
+      "contradictionCount": 0,
+      "isActive": true,
+      "duplicateHash": "432c5ff319b4a667",
+      "originalInvoiceId": "INV-B-003",
+      "duplicateInvoiceIds": [],
+      "vendorId": "partsag",
+      "invoiceNumber": "PA-7810",
+      "amount": 1190,
+      "confirmedDuplicate": false,
+      "resolution": "pending"
+    },
+    {
+      "type": "duplicate",
+      "id": "dup_mjll6wb0_47bf3faab43c0169",
+      "createdAt": "2025-12-25T15:17:37.932Z",
+      "updatedAt": "2025-12-25T15:17:37.932Z",
+      "confidence": 0.3,
+      "reinforcementCount": 1,
+      "contradictionCount": 0,
+      "isActive": true,
+      "duplicateHash": "ee23227033c6afe2",
+      "originalInvoiceId": "INV-C-001",
+      "duplicateInvoiceIds": [],
+      "vendorId": "freightco",
+      "invoiceNumber": "FC-1001",
+      "amount": 1190,
+      "confirmedDuplicate": false,
+      "resolution": "pending"
+    }
+  ],
+  "stats": {
+    "totalInvoicesProcessed": 0,
+    "totalCorrectionsApplied": 0,
+    "totalHumanReviewsRequested": 0,
+    "averageConfidence": 0
+  }
+}

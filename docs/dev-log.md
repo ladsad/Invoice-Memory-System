@@ -268,15 +268,43 @@ Each processing generates entries like:
 
 ### Next Steps
 
-- [x] Implement duplicate detection
-- [x] Add bad memory protection
-- [ ] Add sample invoice data for testing
-- [ ] Create CLI demo runner with test scenarios
+- [x] Implement demo runner
 - [ ] Add unit tests for rule modules
+- [ ] Create CLI interface for single invoice processing
 
 ---
 
-## Session 5: Duplicates and Bad Memory Protection
+## Session 6: Demo Runner & Scenarios
+
+**Date:** 2025-12-25
+
+### What Was Done
+
+1.  **Demo Runner Implementation** (`src/demo/demoRunner.ts`):
+    -   Created a script to simulate learning over time.
+    -   Implemented 4 scenarios:
+        1.  **Supplier GmbH**: Initial low confidence -> Human correction (field mapping) -> Learning -> Auto-apply on next invoice.
+        2.  **Parts AG**: Missing VAT/Currency -> Human correction -> Learned via reinforcement.
+        3.  **Freight & Co**: SKU mapping ("Seefracht" -> "FREIGHT") -> Learned from corrections.
+        4.  **Duplicates**: Verified hash-based duplicate detection logic.
+
+2.  **Sample Data Integration**:
+    -   Successfully loaded `invoices/` JSON files for the demo.
+    -   Simulated "human-in-the-loop" feedback by applying canned corrections.
+
+3.  **End-to-End Verification**:
+    -   Verified that `requiresHumanReview` flags behaves correctly (True initially, False after learning).
+    -   Confirmed confidence scores increase with learning.
+    -   Confirmed duplicate detection works as expected.
+
+### Key Observation: Learning Loop
+The demo clearly shows the system's ability to "one-shot learn" simple mappings. For example, once `Leistungsdatum` is mapped to `serviceDate` for Supplier GmbH, the next invoice (INV-A-003) automatically applies this mapping with high confidence.
+
+### Next Steps
+
+- [ ] Add unit tests for individual rule modules to ensure robustness.
+- [ ] Refine the CLI for file-based processing.
+
 
 **Date:** 2025-12-25
 

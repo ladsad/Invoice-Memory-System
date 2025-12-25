@@ -167,7 +167,7 @@ Memories with confidence below 0.1 are automatically deactivated.
 | `npm run build` | Compile TypeScript to JavaScript |
 | `npm start` | Run the compiled application |
 | `npm run dev` | Run with ts-node (development) |
-| `npm run demo` | Run the demonstration script |
+| `npm run demo` | Run the learning demo scenarios (requires sample data) |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Format code with Prettier |
 

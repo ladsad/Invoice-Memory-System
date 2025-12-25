@@ -63,6 +63,33 @@ Comprehensive TypeScript interfaces ensuring type safety across:
 - Configuration options
 - Audit trail entries
 
+### 4. Demo System (`src/demo/demoRunner.ts`)
+Demonstrates the learning loop by:
+1.  Loading sample invoices and corrections.
+2.  Processing an invoice (Learning Phase).
+3.  Simulating user feedback.
+4.  Reprocessing subsequent invoices to verify learning (Application Phase).
+
+---
+
+## End-to-End Flow
+
+The following sequence describes the "Human-in-the-loop" learning process:
+
+1.  **Ingestion**: `processInvoice` receives raw JSON.
+2.  **Recall**: System checks for known vendor rules and past corrections.
+3.  **Prediction**: System applies existing knowledge (e.g., "Map 'Leistungsdatum' to 'serviceDate'").
+4.  **Decision**:
+    -   High Confidence? -> **Auto-Apply**
+    -   Low Confidence or Exceptions? -> **Flag for Review**
+5.  **Human Review** (Simulated in Demo):
+    -   User confirms or corrects data.
+    -   Corrections are fed back into the system.
+6.  **Learning**:
+    -   System updates `MemoryStore` with new patterns.
+    -   Confidence for verified predictions increases.
+7.  **Next Run**: Subsequent invoices benefit from updated memory.
+
 ---
 
 ## Data Flow

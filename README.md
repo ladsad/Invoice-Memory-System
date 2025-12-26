@@ -21,7 +21,7 @@ The **Invoice Memory System** is a TypeScript-based engine designed to sit betwe
 The system follows a linear pipeline architecture with a persistent feedback loop:
 
 ```mermaid
-graph LR
+graph TD
     Input[Invoice JSON] --> Recall
     Recall --> Apply
     Apply --> Decide

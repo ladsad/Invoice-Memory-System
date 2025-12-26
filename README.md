@@ -4,19 +4,19 @@
 
 ---
 
-## 🚀 Overview
+## Overview
 
 The **Invoice Memory System** is a TypeScript-based engine designed to sit between an invoice extraction service (like OCR) and your ERP/Accounting system. It solves the problem of repetitive manual corrections by "remembering" how users fix data and automatically applying those patterns to future invoices.
 
 **Key Features:**
-- **🧠 Continuous Learning**: Maps vendor-specific fields (e.g., "Leistungsdatum" → `serviceDate`) based on human feedback.
-- **🛡️ Bad Memory Protection**: Prevents one-off errors from teaching the system incorrect rules using a confidence scoring system.
-- **🔍 Duplicate Detection**: Identifies potential duplicate invoices using fuzzy hashing (Vendor + Invoice # + Date/Amount).
-- **📝 Audit Trail**: Provides a complete, transparent log of why a decision was made (Recall → Apply → Decide).
+- **Continuous Learning**: Maps vendor-specific fields (e.g., "Leistungsdatum" → `serviceDate`) based on human feedback.
+- **Bad Memory Protection**: Prevents one-off errors from teaching the system incorrect rules using a confidence scoring system.
+- **Duplicate Detection**: Identifies potential duplicate invoices using fuzzy hashing (Vendor + Invoice # + Date/Amount).
+- **Audit Trail**: Provides a complete, transparent log of why a decision was made (Recall → Apply → Decide).
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 The system follows a linear pipeline architecture with a persistent feedback loop:
 
@@ -47,7 +47,7 @@ graph LR
 
 ---
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 **Prerequisites:**
 -   Node.js >= 18.0.0
@@ -72,7 +72,7 @@ npm run smoke
 
 ---
 
-## 🎮 Demo Walkthrough
+## Demo Walkthrough
 
 We have included a comprehensive demo script that simulates a real-world learning lifecycle.
 
@@ -100,7 +100,7 @@ npm run demo
 
 ---
 
-## 📐 Design Decisions
+## Design Decisions
 
 ### Confidence Scoring
 Every memory starts with a base confidence (`0.3`).
@@ -116,7 +116,7 @@ To prevent poisoning the system with bad data:
 
 ---
 
-## 🔍 Audit & Explainability
+## Audit & Explainability
 
 Transparency is critical for automation. The system generates an `auditTrail` array in the output:
 
@@ -132,7 +132,7 @@ This allows developers and support teams to trace exactly **why** a field was ch
 
 ---
 
-## 🔌 Extensibility
+## Extensibility
 
 The system is designed for growth:
 
